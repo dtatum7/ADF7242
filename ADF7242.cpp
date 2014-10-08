@@ -26,7 +26,6 @@
 #include <SPI.h>
 #include "ADF7242.h"
 
-// Constructor
 ////////////////////////////////////////////////////////////////////////////
 // ADF7242(int CS)
 ////////////////////////////////////////////////////////////////////////////
@@ -40,10 +39,20 @@ ADF7242::ADF7242(int CS) {
   SPI.setBitOrder(MSBFIRST); // for ADF7242
   SPI.setClockDivider(SPI_CLOCK_DIV4); // for 4MHz
   SPI.setDataMode(SPI_MODE0); // Clock base at zero, sampled on rising, propagated on falling
+  pinMode(_CS, OUTPUT); // Set CS pin to be an Output
+  digitalWrite(_CS, HIGH); // Initialize CS pin to be high
 }
 
 // Destructor
-
+////////////////////////////////////////////////////////////////////////////
+// ADF7242()
+////////////////////////////////////////////////////////////////////////////
+// Destructor
+////////////////////////////////////////////////////////////////////////////
+// TODO - Write me!!!
+////////////////////////////////////////////////////////////////////////////
+ADF7242::~ADF7242() {
+}
 
 ////////////////////////////////////////////////////////////////////////////
 // void reset()
@@ -260,7 +269,6 @@ void ADF7242::initFSK(unsigned char dataRate) {
       regWrite(dr0,0x01);
       regWrite(dr1,0xF4);
       regWrite(iirf_cfg,0x17); // from table 38
-      //regWrite(iirf_cfg,0x12); // from register dump
       regWrite(dm_cfg1,0x08);
       regWrite(rxfe_cfg,0x16);
       break;
@@ -275,7 +283,6 @@ void ADF7242::initFSK(unsigned char dataRate) {
       regWrite(dr0,0x02);
       regWrite(dr1,0x71);
       regWrite(iirf_cfg,0x17); // from table 38
-      //regWrite(iirf_cfg,0x12); // from register dump
       regWrite(dm_cfg1,0x08);
       regWrite(rxfe_cfg,0x16);
       break;
