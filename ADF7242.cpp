@@ -39,6 +39,9 @@ ADF7242::ADF7242(int CS) {
   SPI.setBitOrder(MSBFIRST); // for ADF7242
   SPI.setClockDivider(SPI_CLOCK_DIV4); // for 4MHz
   SPI.setDataMode(SPI_MODE0); // Clock base at zero, sampled on rising, propagated on falling
+  pinMode(11, OUTPUT); // Set MOSI pin to be an output
+  pinMode(12, INPUT); // Set MISO pin to be an output
+  pinMode(13, OUTPUT); // Set clock pin to be an output
   pinMode(_CS, OUTPUT); // Set CS pin to be an Output
   digitalWrite(_CS, HIGH); // Initialize CS pin to be high
 }
@@ -52,6 +55,8 @@ ADF7242::ADF7242(int CS) {
 // TODO - Write me!!!
 ////////////////////////////////////////////////////////////////////////////
 ADF7242::~ADF7242() {
+  sleep(); // Put the ADF7242 to sleep
+  SPI.end(); // End SPI communication with ADF7242
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -85,6 +90,7 @@ void ADF7242::sleep() {
 ////////////////////////////////////////////////////////////////////////////
 void ADF7242::idle() {
   digitalWrite(_CS, LOW); // send CS low to enable SPI transfer to/from ADF7242
+  SPI.transfer(RC_IDLE); // Sleep the ADF7242
   delay(1); // allow time for the RC to mellow out
   digitalWrite(_CS, HIGH); // send CS high to disable SPI transfer to/from ADF7242
 }
@@ -152,6 +158,18 @@ unsigned char ADF7242::meas() {
 }
 
 ////////////////////////////////////////////////////////////////////////////
+// void configSPI()
+////////////////////////////////////////////////////////////////////////////
+// Sets SPI bit order, clock divider, and data mode. This function is useful
+// when there are multiple SPI devices using different settings.
+////////////////////////////////////////////////////////////////////////////
+void ADF7242::configSPI() {
+  SPI.setBitOrder(MSBFIRST); // for ADF7242
+  SPI.setClockDivider(SPI_CLOCK_DIV4); // for 4MHz
+  SPI.setDataMode(SPI_MODE0); // Clock base at zero, sampled on rising, propagated on falling
+}
+
+////////////////////////////////////////////////////////////////////////////
 // unsigned char regRead(unsigned int regAddr)
 ////////////////////////////////////////////////////////////////////////////
 // Reads 1 byte of data to the specified register over SPI
@@ -186,6 +204,7 @@ void ADF7242::regWrite(unsigned int regAddr, unsigned char regData) {
   SPI.transfer(0xFF & regAddr); // Address bits [7:0]
   SPI.transfer(regData); // Data byte
   digitalWrite(_CS, HIGH); // send CS high to disable SPI transfer to/from ADF7242
+  delayMicroseconds(25);
   #ifdef DEBUG
     // Read data just written and verify. Errors will appear in serial terminal
     digitalWrite(_CS, LOW); // send CS low to enable SPI transfer to/from ADF7242
@@ -203,7 +222,7 @@ void ADF7242::regWrite(unsigned int regAddr, unsigned char regData) {
       Serial.print("Register Data Read: 0x");
       Serial.println(_dataRead, HEX);
       Serial.println("*************************");
-    } // end if(SPI.transfer(SPI_NOP) == regData)
+    } // end if(_dataRead != regData)
   #endif
 }
 
@@ -443,11 +462,11 @@ void ADF7242::syncWord(unsigned long word, unsigned char tol) {
   #ifdef DEBUG
     Serial.print("Sync word length read from sync_config, field sync_len: ");
     Serial.println(regRead(sync_config) & 0x1F);
-    Serial.print("Sync word read from sync_word2: ");
+    Serial.print("Sync word read from sync_word2: 0x");
     Serial.println(regRead(sync_word2),HEX);
-    Serial.print("Sync word read from sync_word1: ");
+    Serial.print("Sync word read from sync_word1: 0x");
     Serial.println(regRead(sync_word1),HEX);
-    Serial.print("Sync word read from sync_word0: ");
+    Serial.print("Sync word read from sync_word0: 0x");
     Serial.println(regRead(sync_word0),HEX);
   #endif
 }
@@ -512,7 +531,7 @@ void ADF7242::cfgPA(unsigned char pwr, bool hp, unsigned char rr) {
 void ADF7242::cfgAFC(unsigned char range) {
   regWrite(afc_cfg, 0x07); // Sets AFC polarity to 1 and locks AFC on preamble detection
   regWrite(afc_ki_kp, 0x99); // Sets the AFC PI controller proportional and integral gain
-  regWrite(afc_range, 0x50); // Limits the AFC pull-in range. Should be set to half of the receive baseband filter BW
+  regWrite(afc_range, range); // Limits the AFC pull-in range. Should be set to half of the receive baseband filter BW
   #ifdef DEBUG
     Serial.print("Register afc_cfg: 0x");
     Serial.println(regRead(afc_cfg), HEX);

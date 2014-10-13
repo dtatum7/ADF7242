@@ -29,7 +29,7 @@
 #include "Arduino.h"
 #include <SPI.h>
 
-#define DEBUG // uncomment for DEBUG mode
+//#define DEBUG // uncomment for DEBUG mode
 
 // SPI Command List for ADF7242
 #define SPI_NOP 0xFF // No operation. Use for dummy writes.
@@ -146,6 +146,9 @@ public:
 	// Constructor with chip select (CS) pin
 	ADF7242(int CS);
 
+	// Destructor
+	~ADF7242();
+
 	// Reset state
 	void reset();
 
@@ -169,6 +172,9 @@ public:
 
 	// Measure chip temperature state
 	unsigned char meas();
+
+	// Sets SPI bit order, clock divider, and data mode
+	void configSPI();
 
 	// Read register
 	unsigned char regRead(unsigned int regAddr);
@@ -214,6 +220,7 @@ public:
 private:
 	// Chip select pin
 	int _CS;
+
 };
 
 #endif
