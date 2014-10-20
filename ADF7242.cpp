@@ -204,6 +204,8 @@ void ADF7242::regWrite(unsigned int regAddr, unsigned char regData) {
   SPI.transfer(0xFF & regAddr); // Address bits [7:0]
   SPI.transfer(regData); // Data byte
   digitalWrite(_CS, HIGH); // send CS high to disable SPI transfer to/from ADF7242
+  digitalWrite(11, LOW); // Software fix for stray capacitance on MOSI line
+  digitalWrite(12, LOW); // Software fix for stray capacitance on MISO line
   delayMicroseconds(25);
   #ifdef DEBUG
     // Read data just written and verify. Errors will appear in serial terminal
